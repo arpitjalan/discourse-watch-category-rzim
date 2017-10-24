@@ -9,25 +9,10 @@ module ::WatchCategory
     swad_category = Category.find_by_slug("swad")
     swad_group = Group.find_by_name("SWAD")
 
-    unless swad_category.nil? || swad_group.nil?
-      swad_group.users.each do |user|
-        user.user_option.update_columns(mailing_list_mode: true)
-        watched_categories = CategoryUser.lookup(user, :watching).pluck(:category_id)
-        CategoryUser.set_notification_level_for_category(user, CategoryUser.notification_levels[:watching], swad_category.id) unless watched_categories.include?(swad_category.id)
-      end
-    end
-
     ncmls_steering_category = Category.find_by_slug("ncmls-steering-committee")
     ncmls_steering_group = Group.find_by_name("NCMLS_Steering")
 
-    unless ncmls_steering_category.nil? || ncmls_steering_group.nil?
-      ncmls_steering_group.users.each do |user|
-        user.user_option.update_columns(mailing_list_mode: true)
-        watched_categories = CategoryUser.lookup(user, :watching).pluck(:category_id)
-        CategoryUser.set_notification_level_for_category(user, CategoryUser.notification_levels[:watching], ncmls_steering_category.id) unless watched_categories.include?(ncmls_steering_category.id)
-      end
-    end
-
+    # mute all categories
     Category.find_each do |cat|
       unless cat.id == swad_category.id
         swad_group.users.each do |user|
@@ -41,6 +26,24 @@ module ::WatchCategory
           muted_categories = CategoryUser.lookup(user, :muted).pluck(:category_id)
           CategoryUser.set_notification_level_for_category(user, CategoryUser.notification_levels[:muted], cat.id) unless muted_categories.include?(cat.id)
         end
+      end
+    end
+
+    # watch SWAD category
+    unless swad_category.nil? || swad_group.nil?
+      swad_group.users.each do |user|
+        user.user_option.update_columns(mailing_list_mode: true)
+        watched_categories = CategoryUser.lookup(user, :watching).pluck(:category_id)
+        CategoryUser.set_notification_level_for_category(user, CategoryUser.notification_levels[:watching], swad_category.id) unless watched_categories.include?(swad_category.id)
+      end
+    end
+
+    # watch "NCMLS Steering Committee" category
+    unless ncmls_steering_category.nil? || ncmls_steering_group.nil?
+      ncmls_steering_group.users.each do |user|
+        user.user_option.update_columns(mailing_list_mode: true)
+        watched_categories = CategoryUser.lookup(user, :watching).pluck(:category_id)
+        CategoryUser.set_notification_level_for_category(user, CategoryUser.notification_levels[:watching], ncmls_steering_category.id) unless watched_categories.include?(ncmls_steering_category.id)
       end
     end
   end
